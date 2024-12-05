@@ -1,0 +1,6 @@
+@collectiontracker_HostAddress = http://localhost:5174
+
+GET {{collectiontracker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
