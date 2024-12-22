@@ -30,7 +30,8 @@ namespace collectiontracker.Controllers
                 Name = fig.Name,
                 ImageUrl = fig.ImageUrl,
                 EbayPrice = fig.EbayPrice,
-                LastUpdated = fig.LastUpdated
+                LastUpdated = fig.LastUpdated,
+                SeriesId = fig.SeriesId
             }).ToList();
 
             return Ok(figuresDto);
@@ -42,7 +43,7 @@ namespace collectiontracker.Controllers
         {
             var figure = await appDbContext.Figures.FindAsync(id);
 
-            if (figure == null )
+            if (figure == null)
             {
                 return NotFound();
             }
@@ -53,10 +54,35 @@ namespace collectiontracker.Controllers
                 Name = figure.Name,
                 ImageUrl = figure.ImageUrl,
                 EbayPrice = figure.EbayPrice,
-                LastUpdated = figure.LastUpdated
+                LastUpdated = figure.LastUpdated,
+                SeriesId = figure.SeriesId
             };
 
             return Ok(figureDto);
+        }
+
+        [HttpGet("series/{seriesId}")]
+        [SwaggerOperation(OperationId = "GetFiguresBySeries")]
+        public async Task<ActionResult<IEnumerable<ReadFiguresDto>>> GetAllFiguresBySeries(int seriesId)
+        {
+            var figures = await appDbContext.Figures.Where(fig => fig.SeriesId == seriesId).ToListAsync();
+
+            var figuresDto = figures.Select(fig => new ReadFiguresDto
+            {
+                Id = fig.Id,
+                Name = fig.Name,
+                ImageUrl = fig.ImageUrl,
+                EbayPrice = fig.EbayPrice,
+                LastUpdated = fig.LastUpdated,
+                SeriesId = fig.SeriesId
+            }).ToList();
+
+            if (!figuresDto.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(figuresDto);
         }
 
         [HttpPost]
@@ -73,7 +99,8 @@ namespace collectiontracker.Controllers
                 Name = figureDto.Name,
                 ImageUrl = figureDto.ImageUrl,
                 EbayPrice = figureDto.EbayPrice,
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow,
+                SeriesId = figureDto.SeriesId
             };
 
             appDbContext.Figures.Add(newFigure);
