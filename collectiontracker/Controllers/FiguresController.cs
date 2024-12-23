@@ -4,6 +4,7 @@ using collectiontracker.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace collectiontracker.Controllers
 {
@@ -86,6 +87,7 @@ namespace collectiontracker.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [SwaggerOperation(OperationId = "AddFigure")]
         public async Task<ActionResult<Figures>> AddFigure(CreateFigureDto figureDto)
         {
@@ -107,7 +109,7 @@ namespace collectiontracker.Controllers
 
             await appDbContext.SaveChangesAsync();
 
-            return Ok(newFigure);
+            return Ok(newFigure);  
         }
     }
 }
