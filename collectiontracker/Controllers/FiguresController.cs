@@ -28,6 +28,7 @@ namespace collectiontracker.Controllers
             var figuresDto = figures.Select(fig => new ReadFiguresDto
             {
                 Id = fig.Id,
+                EbayItemId = fig.EbayItemId,
                 Name = fig.Name,
                 ImageUrl = fig.ImageUrl,
                 EbayPrice = fig.EbayPrice,
@@ -52,6 +53,7 @@ namespace collectiontracker.Controllers
             var figureDto = new ReadFiguresDto
             {
                 Id = figure.Id,
+                EbayItemId = figure.EbayItemId,
                 Name = figure.Name,
                 ImageUrl = figure.ImageUrl,
                 EbayPrice = figure.EbayPrice,
@@ -71,6 +73,7 @@ namespace collectiontracker.Controllers
             var figuresDto = figures.Select(fig => new ReadFiguresDto
             {
                 Id = fig.Id,
+                EbayItemId = fig.EbayItemId,
                 Name = fig.Name,
                 ImageUrl = fig.ImageUrl,
                 EbayPrice = fig.EbayPrice,
