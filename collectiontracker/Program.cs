@@ -19,8 +19,13 @@ builder.Services.AddIdentity<IdentityUser<int>, IdentityRole<int>>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+//IHttpClientFactory
+builder.Services.AddHttpClient();
+
 //Ebay Token Service
 builder.Services.AddTransient<EbayTokenService>();
+//Ebay Data Service
+builder.Services.AddScoped<EbayDataService>();
 
 //JWT Auth
 builder.Services.AddAuthentication(options =>

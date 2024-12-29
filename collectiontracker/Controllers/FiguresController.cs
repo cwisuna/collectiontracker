@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
+using collectiontracker.Services;
 
 namespace collectiontracker.Controllers
 {
@@ -13,10 +14,12 @@ namespace collectiontracker.Controllers
     public class FiguresController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
+        private readonly EbayDataService ebayDataService;
 
-        public FiguresController(AppDbContext appDbContext)
+        public FiguresController(AppDbContext appDbContext, EbayDataService ebayDataService)
         {
             this.appDbContext = appDbContext;
+            this.ebayDataService = ebayDataService;
         }
 
         [HttpGet]
@@ -99,6 +102,11 @@ namespace collectiontracker.Controllers
                 return BadRequest();
             }
 
+            if (figureDto.SeriesId != 1 && figureDto.SeriesId != 2)
+            {
+                return BadRequest("Invalid SeriesId. Only DBZ (1) or Naruto (2) are allowed.");
+            }
+
             var newFigure = new Figures
             {
                 Name = figureDto.Name,
@@ -114,5 +122,66 @@ namespace collectiontracker.Controllers
 
             return Ok(newFigure);  
         }
+
+        [HttpPost("from-ebay")]
+        //Authorize(Roles = "Admin")]
+        [SwaggerOperation(OperationId = "AddFigureFromEbay")]
+        public async Task<IActionResult> AddFigureFromEbay([FromBody] AddFigureFromEbayDto request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.LegacyId))
+            {
+                return BadRequest("Invalid request. LegacyId and SeriesId are required.");
+            }
+
+            if (request.SeriesId != 1 && request.SeriesId != 2)
+            {
+                return BadRequest("Invalid SeriesId. Only DBZ (1) or Naruto (2) are allowed.");
+            }
+
+            var figureDto = await ebayDataService.GetEbayItemDetails(request.LegacyId);
+            if (figureDto == null)
+            {
+                return NotFound($"No item found on eBay with LegacyId: {request.LegacyId}");
+            }
+
+            figureDto.SeriesId = request.SeriesId;
+
+            var existingFigure = await appDbContext.Figures
+                .FirstOrDefaultAsync(f => f.EbayItemId == figureDto.EbayItemId);
+            if (existingFigure != null)
+            {
+                return Conflict("Figure already exists in the database.");
+            }
+
+            var newFigure = new Figures
+            {
+                EbayItemId = figureDto.EbayItemId,
+                Name = figureDto.Name,
+                ImageUrl = figureDto.ImageUrl,
+                EbayPrice = figureDto.EbayPrice,
+                LastUpdated = DateTime.UtcNow,
+                SeriesId = figureDto.SeriesId
+            };
+
+            appDbContext.Figures.Add(newFigure);
+            await appDbContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetFigure), new { id = newFigure.Id }, newFigure);
+        }
+
+        /*[HttpPost("add-from-ebay")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(OperationId = "AddFiguresFromEbay")]
+        public async Task<ActionResult> AddFiguresFromEbay([FromBody] List<string> legacyIds)
+        {
+            if (legacyIds == null || legacyIds.Count == 0)
+            {
+                return BadRequest("No legacy IDs provided.");
+            }
+
+            await ebayDataService.AddEbayItemsToDatabase(legacyIds);
+
+            return Ok("Figures added from eBay successfully.");
+        }*/
     }
 }
